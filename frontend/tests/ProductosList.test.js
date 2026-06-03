@@ -1,0 +1,18 @@
+import { mount, flushPromises } from "@vue/test-utils";
+import { vi } from "vitest";
+import axios from "axios";
+import ProductosList from "@/views/ProductosList.vue";
+
+vi.mock("axios");
+
+it("carga y muestra productos desde la API", async () => {
+	axios.get.mockResolvedValue({
+		data: [{ id: 1, nombre: "Mouse", precio: 25.0, stock: 3 }],
+	});
+
+	const wrapper = mount(ProductosList);
+	await flushPromises();
+
+	expect(axios.get).toHaveBeenCalledWith("/api/productos");
+	expect(wrapper.text()).toContain("Mouse");
+});
