@@ -3,48 +3,42 @@
 namespace App\Http\Controllers;
 
 use App\Models\Producto;
-use App\Http\Requests\StoreProductoRequest;
-use App\Http\Requests\UpdateProductoRequest;
-use App\Http\Resources\ProductoResource;
 use Illuminate\Http\Request;
 
 class ProductoController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $productos = Producto::with('categoria')
-            ->buscar($request->busqueda)
-            ->deCategoria($request->categoria_id)
-            ->rangoPrecio($request->precio_min, $request->precio_max)
-            ->orderBy($request->get('orden', 'nombre'), $request->get('dir', 'asc'))
-            ->paginate($request->get('por_pagina', 15));
-
-        return ProductoResource::collection($productos);
+        return response()->json(Producto::all(), 200);
     }
 
-    public function store(StoreProductoRequest $request)
+    public function store(Request $request)
     {
-        $this->authorize('create', Producto::class);
-        $producto = Producto::create($request->validated());
+        $data = $request->validate([
+            'nombre'      => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'precio'      => 'required|numeric|min:0',
+            'stock'       => 'required|integer|min:0',
+        ]);
+
+        $producto = Producto::create($data);
         return response()->json($producto, 201);
     }
 
     public function show(Producto $producto)
     {
-        return response()->json($producto);
+        return response()->json($producto, 200);
     }
 
-    public function update(UpdateProductoRequest $request, Producto $producto)
+    public function update(Request $request, Producto $producto)
     {
-        $this->authorize('update', $producto);
-        $producto->update($request->validated());
-        return response()->json($producto);
+        $producto->update($request->all());
+        return response()->json($producto, 200);
     }
 
     public function destroy(Producto $producto)
     {
-        $this->authorize('delete', $producto);
         $producto->delete();
-        return response()->noContent();
+        return response()->json(['mensaje' => 'Eliminado'], 200);
     }
 }
